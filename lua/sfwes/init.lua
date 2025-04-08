@@ -17,12 +17,18 @@ function M.setup(opts)
 		callback = function()
 			print("testing after write? +ft " .. vim.bo.ft)
 			if vim.bo.ft == "apex" then
+				local spinner = require("sfwes.indicator")
+				spinner.start()
 				local job = vim.fn.jobstart(sf .. " project deploy start", {
 					on_stdout = function(jobid, data, event)
 						print(data)
+						spinner.status = "success"
+						spinner.stop()
 					end,
 					on_stderr = function(jobid, data, event)
 						print(data)
+						spinner.status = "error"
+						spinner.stop()
 					end,
 				})
 			end

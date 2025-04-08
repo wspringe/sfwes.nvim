@@ -1,6 +1,6 @@
 local M = {}
 
-local spinner_frames = { "x", "t", "x", "t" }
+local spinner_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
 local frame = 1
 local status = "idle"
 local timer = null
@@ -23,8 +23,8 @@ M.start = function()
 	status = "running"
 	timer = vim.loop.new_timer()
 	timer:start(
-		0,
-		100,
+		10,
+		99999,
 		vim.schedule_wrap(function()
 			frame = (frame % #spinner_frames) + 1
 			vim.cmd("redrawstatus")
