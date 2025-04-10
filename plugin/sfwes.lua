@@ -1,6 +1,3 @@
-print("plugin/sf.lua is executed!")
-print("help")
-
 -- for testing purposes
 local ok, lualine = pcall(require, "lualine")
 if not ok then

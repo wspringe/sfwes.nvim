@@ -1,7 +1,6 @@
 local M = {}
 
 function M.setup(opts)
-	print("testing")
 	opts = opts or {}
 	local sf = opts.sf
 
@@ -13,22 +12,26 @@ function M.setup(opts)
 		end
 	end)
 
+	local stdout = ""
 	vim.api.nvim_create_autocmd("BufWritePost", {
 		callback = function()
-			print("testing after write? +ft " .. vim.bo.ft)
 			if vim.bo.ft == "apex" then
 				local spinner = require("sfwes.indicator")
 				spinner.start()
-				local job = vim.fn.jobstart(sf .. " project deploy start", {
-					on_stdout = function(jobid, data, event)
-						print(data)
-						spinner.status = "success"
-						spinner.stop()
+				local job = vim.fn.jobstart(sf .. " project deploy start --json", {
+					on_stdout = function(_, data, name)
+						for _, line in ipairs(data) do
+							stdout = stdout .. line .. "\n"
+						end
 					end,
-					on_stderr = function(jobid, data, event)
-						print(data)
-						spinner.status = "error"
-						spinner.stop()
+					on_stderr = function(_, data, name) end,
+					on_exit = function(_, data, exit_code)
+						if data == 0 then
+							spinner.stop("success")
+						else
+							spinner.stop("error")
+						end
+						-- print(stdout)
 					end,
 				})
 			end

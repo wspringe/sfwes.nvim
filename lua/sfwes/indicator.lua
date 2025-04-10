@@ -23,8 +23,8 @@ M.start = function()
 	status = "running"
 	timer = vim.loop.new_timer()
 	timer:start(
-		10,
-		99999,
+		0,
+		50,
 		vim.schedule_wrap(function()
 			frame = (frame % #spinner_frames) + 1
 			vim.cmd("redrawstatus")
@@ -32,13 +32,13 @@ M.start = function()
 	)
 end
 
-M.stop = function()
+M.stop = function(newStatus)
 	if timer then
 		timer:stop()
 		timer:close()
 		timer = nil
 	end
-	status = success and "success" or "error"
+	status = newStatus
 	vim.cmd("redrawstatus")
 	vim.defer_fn(function()
 		status = "idle"
