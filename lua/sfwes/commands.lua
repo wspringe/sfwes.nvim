@@ -54,16 +54,20 @@ function M.register()
 		local extmarks = vim.api.nvim_buf_get_extmarks(0, _config.get_namespace(), 0, -1, {})
 		local marked_lines = {}
 		for _, extmark in ipairs(extmarks) do
-			table.insert(marked_lines, extmark[1] + 1)
+			table.insert(marked_lines, extmark[2] + 1)
 		end
 		local cursor_pos = vim.api.nvim_win_get_cursor(0)
 		local cursor_line = cursor_pos[1]
 
-		if marked_lines[cursor_line] ~= nil then
+		if vim.tbl_contains(marked_lines, cursor_line) then
 			local current_line = vim.api.nvim_get_current_line()
 			local last_word = current_line:match("(%w+)%W*$")
 			local current_file_name = vim.fn.expand("%:t"):match("^(.*)%.")
-			_sf.run_test(current_file_name, last_word)
+			if last_word == current_file_name then
+				_sf.run_tests(current_file_name)
+			else
+				_sf.run_test(current_file_name, last_word)
+			end
 		end
 	end, {})
 end

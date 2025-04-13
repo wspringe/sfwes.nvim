@@ -37,7 +37,6 @@ function M.deploy()
 								source = "sfwes",
 							})
 						end
-						print(vim.inspect(diagnostics))
 						vim.diagnostic.set(_config.get_namespace(), 0, diagnostics)
 					end
 				end,
@@ -128,6 +127,96 @@ function M.create(component_type, component_name, file_path)
 		M.deploy()
 	else
 		-- TODO: print error
+	end
+end
+
+function M.run_test(test_class_name, test_name)
+	print("Running single test")
+	if vim.bo.ft == "apex" then
+		vim.diagnostic.reset(_config.get_namespace(), 0)
+		local spinner = require("sfwes.indicator")
+		spinner.start()
+
+		local stdout = ""
+		local job = vim.fn.jobstart(
+			_config.get("sf") .. string.format(" apex run test --tests %s.%s --json -w 20", test_class_name, test_name),
+			{
+				on_stdout = function(_, data)
+					for _, line in ipairs(data) do
+						stdout = stdout .. line .. "\n"
+					end
+				end,
+				on_stderr = function(_, data, name) end,
+				on_exit = function(_, data, exit_code)
+					print(vim.inspect(data))
+					if data == 0 then
+						spinner.stop("success")
+					elseif data == 100 then
+						spinner.stop("error")
+						local result = vim.fn.json_decode(stdout)
+						local line_number = string.match(result.result.tests[1].StackTrace, "line (%d+)")
+						local diagnostics = {}
+						table.insert(diagnostics, {
+							lnum = line_number - 1,
+							col = -1,
+							message = result.result.tests[1].Message,
+							severity = vim.diagnostic.severity.ERROR,
+							source = "sfwes",
+						})
+						vim.diagnostic.set(_config.get_namespace(), 0, diagnostics)
+					else
+						spinner.stop("error")
+					end
+				end,
+			}
+		)
+	end
+end
+
+function M.run_tests(test_class_name)
+	print("Running all tests")
+	if vim.bo.ft == "apex" then
+		vim.diagnostic.reset(_config.get_namespace(), 0)
+		local spinner = require("sfwes.indicator")
+		spinner.start()
+
+		local stdout = ""
+		local job = vim.fn.jobstart(
+			_config.get("sf") .. string.format(" apex run test --tests %s --json -w 60", test_class_name),
+			{
+				on_stdout = function(_, data)
+					for _, line in ipairs(data) do
+						stdout = stdout .. line .. "\n"
+					end
+				end,
+				on_stderr = function(_, data, name) end,
+				on_exit = function(_, data, exit_code)
+					print(vim.inspect(data))
+					if data == 0 then
+						spinner.stop("success")
+					elseif data == 100 then
+						spinner.stop("error")
+						local result = vim.fn.json_decode(stdout)
+						local diagnostics = {}
+						for _, obj in ipairs(result.result.tests) do
+							if obj.Outcome == "Fail" then
+								local line_number = string.match(obj.StackTrace, "line (%d+)")
+								table.insert(diagnostics, {
+									lnum = line_number - 1,
+									col = -1,
+									message = obj.Message,
+									severity = vim.diagnostic.severity.ERROR,
+									source = "sfwes",
+								})
+							end
+						end
+						vim.diagnostic.set(_config.get_namespace(), 0, diagnostics)
+					else
+						spinner.stop("error")
+					end
+				end,
+			}
+		)
 	end
 end
 

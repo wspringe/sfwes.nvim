@@ -5,7 +5,7 @@ local _commands = require("sfwes.commands")
 
 function M.setup(opts)
 	_config.setup(opts)
-	_sf.setup(opts)
+	_sf.setup(_config)
 	_commands.setup(_config, _sf)
 	_commands.register()
 

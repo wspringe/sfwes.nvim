@@ -6,8 +6,8 @@ M.options = {
 	ns_name = "Sfwes",
 }
 
-function M.setup(config)
-	vim.tbl_deep_extend("force", M.options, config or {}) --[[@as Options]]
+function M.setup(opts)
+	M.options = vim.tbl_deep_extend("force", M.options, opts or {})
 end
 
 function M.get(key)
