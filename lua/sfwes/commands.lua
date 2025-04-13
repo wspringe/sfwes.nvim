@@ -1,25 +1,30 @@
 local M = {}
-local sf = require("sfwes.sf")
-local config = require("sfwes.config")
+local _sf = require("sfwes.sf")
+local _config = require("sfwes.config")
+
+function M.setup(config, sf)
+	_sf = sf
+	_config = config
+end
 
 function M.register()
-	vim.api.nvim_create_user_command(ns_name .. "SaveAndDeploy", function()
+	vim.api.nvim_create_user_command(_config.get("ns_name") .. "SaveAndDeploy", function()
 		vim.cmd("write")
-		sf.deploy()
+		_sf.deploy()
 	end, {})
 
-	vim.api.nvim_create_user_command(ns_name .. "RefreshMetadata", function()
-		sf.refresh()
+	vim.api.nvim_create_user_command(_config.get("ns_name") .. "RefreshMetadata", function()
+		_sf.refresh()
 	end, {})
 
-	vim.api.nvim_create_user_command(ns_name .. "RetrieveMetadata", function(opts)
-		sf.retrieve(opts.fargs[1], opts.fargs[2])
+	vim.api.nvim_create_user_command(_config.get("ns_name") .. "RetrieveMetadata", function(opts)
+		_sf.retrieve(opts.fargs[1], opts.fargs[2])
 	end, {
 		nargs = "+",
 	})
 
-	vim.api.nvim_create_user_command(ns_name .. "Create", function(opts)
-		sf.create(opts.fargs[1], opts.fargs[2])
+	vim.api.nvim_create_user_command(_config.get("ns_name") .. "Create", function(opts)
+		_sf.create(opts.fargs[1], opts.fargs[2])
 	end, {
 		nargs = "+",
 		complete = function(arg_lead, cmd_line)
@@ -44,23 +49,23 @@ function M.register()
 			end
 		end,
 	})
+
+	vim.api.nvim_create_user_command(_config.get("ns_name") .. "RunTest", function(opts)
+		local extmarks = vim.api.nvim_buf_get_extmarks(0, _config.get_namespace(), 0, -1, {})
+		local marked_lines = {}
+		for _, extmark in ipairs(extmarks) do
+			table.insert(marked_lines, extmark[1] + 1)
+		end
+		local cursor_pos = vim.api.nvim_win_get_cursor(0)
+		local cursor_line = cursor_pos[1]
+
+		if marked_lines[cursor_line] ~= nil then
+			local current_line = vim.api.nvim_get_current_line()
+			local last_word = current_line:match("(%w+)%W*$")
+			local current_file_name = vim.fn.expand("%:t"):match("^(.*)%.")
+			_sf.run_test(current_file_name, last_word)
+		end
+	end, {})
 end
-
-vim.api.nvim_create_user_command(ns_name .. "RunTest", function(opts)
-	local extmarks = vim.api.nvim_buf_get_extmarks(0, ns, 0, -1, {})
-	local marked_lines = {}
-	for _, extmark in ipairs(extmarks) do
-		table.insert(marked_lines, extmark[1] + 1)
-	end
-	local cursor_pos = vim.api.nvim_win_get_cursor(0)
-	local cursor_line = cursor_pos[1]
-
-	if marked_lines[cursor_line] ~= nil then
-		local current_line = vim.api.nvim_get_current_line()
-		local last_word = current_line:match("(%w+)%W*$")
-		local current_file_name = vim.fn.expand("%:t"):match("^(.*)%.")
-		sf.run_test(current_file_name, last_word)
-	end
-end, opts)
 
 return M

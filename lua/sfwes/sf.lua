@@ -1,20 +1,20 @@
 local M = {}
-local config = {}
+local _config = require("sfwes.config")
 
-function M.setup(opts)
-	config =
-		vim.tbl_deep_extend("force", { ns_name = "sfwes", ns = vim.api.nvim_create_namespace("sfwes") }, opts or {})
+function M.setup(config)
+	_config = config
 end
 
 function M.deploy()
 	if vim.bo.ft == "apex" then
-		vim.diagnostic.reset(config.ns, 0)
+		vim.diagnostic.reset(_config.get_namespace(), 0)
 		local spinner = require("sfwes.indicator")
 		spinner.start()
 
 		local stdout = ""
-		local job =
-			vim.fn.jobstart(config.sf .. string.format(" project deploy start --json -d %s", vim.fn.expand("%")), {
+		local job = vim.fn.jobstart(
+			_config.get("sf") .. string.format(" project deploy start --json -d %s", vim.fn.expand("%")),
+			{
 				on_stdout = function(_, data)
 					for _, line in ipairs(data) do
 						stdout = stdout .. line .. "\n"
@@ -38,21 +38,23 @@ function M.deploy()
 							})
 						end
 						print(vim.inspect(diagnostics))
-						vim.diagnostic.set(config.ns, 0, diagnostics)
+						vim.diagnostic.set(_config.get_namespace(), 0, diagnostics)
 					end
 				end,
-			})
+			}
+		)
 	end
 end
 
 function M.refresh()
-	vim.diagnostic.reset(config.ns, 0)
+	vim.diagnostic.reset(_config.get_namespace(), 0)
 	local spinner = require("sfwes.indicator")
 	spinner.start()
 
 	local stdout = ""
-	local job =
-		vim.fn.jobstart(config.sf .. string.format(" project retrieve start --json -d %s", vim.fn.expand("%")), {
+	local job = vim.fn.jobstart(
+		_config.get("sf") .. string.format(" project retrieve start --json -d %s", vim.fn.expand("%")),
+		{
 			on_stdout = function(_, data)
 				for _, line in ipairs(data) do
 					stdout = stdout .. line .. "\n"
@@ -69,7 +71,8 @@ function M.refresh()
 					print(vim.inspect(result))
 				end
 			end,
-		})
+		}
+	)
 end
 
 function M.retrieve(metadata_type, metadata_name)
@@ -78,7 +81,8 @@ function M.retrieve(metadata_type, metadata_name)
 
 	local stdout = ""
 	local job = vim.fn.jobstart(
-		config.sf .. string.format(" project retrieve start --json -m %s:%s --json", metadata_type, metadata_name),
+		_config.get("sf")
+			.. string.format(" project retrieve start --json -m %s:%s --json", metadata_type, metadata_name),
 		{
 			on_stdout = function(_, data)
 				for _, line in ipairs(data) do
@@ -116,7 +120,7 @@ function M.create(component_type, component_name, file_path)
 	end
 
 	local output = vim.fn.system(
-		config.sf .. string.format(" %s --name %s --output-dir %s --json", command, component_name, file_path)
+		_config.get("sf") .. string.format(" %s --name %s --output-dir %s --json", command, component_name, file_path)
 	)
 	local result = vim.fn.json_decode(output)
 	if result.status == 0 then
