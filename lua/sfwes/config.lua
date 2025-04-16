@@ -4,6 +4,7 @@ M.options = {
 	sf = "",
 	ns = vim.api.nvim_create_namespace("sfwes"),
 	ns_name = "Sfwes",
+	use_test_watcher = true,
 }
 
 function M.setup(opts)

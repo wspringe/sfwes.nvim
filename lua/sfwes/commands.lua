@@ -59,14 +59,38 @@ function M.register()
 		local cursor_pos = vim.api.nvim_win_get_cursor(0)
 		local cursor_line = cursor_pos[1]
 
-		if vim.tbl_contains(marked_lines, cursor_line) then
+		print("test watcher: " .. vim.inspect(_config.get("use_test_watcher")))
+		-- TODO: refactor
+		if _config.get("use_test_watcher") then
 			local current_line = vim.api.nvim_get_current_line()
 			local last_word = current_line:match("(%w+)%W*$")
 			local current_file_name = vim.fn.expand("%:t"):match("^(.*)%.")
+			local test_data = { name = current_file_name, status = "started", children = {} }
 			if last_word == current_file_name then
-				_sf.run_tests(current_file_name)
+				for i = 2, #marked_lines do
+					local line_number = marked_lines[i]
+					local line = vim.api.nvim_buf_get_lines(0, line_number - 1, line_number, false)
+					print(vim.inspect(line))
+					local test_name = line[1]:match("(%w+)%W*$")
+					table.insert(test_data.children, { name = test_name, status = "started" })
+				end
 			else
-				_sf.run_test(current_file_name, last_word)
+				table.insert(test_data.children, { name = last_word, status = "started" })
+			end
+			print("test_data to pass " .. vim.inspect(test_data))
+			local test_watcher = require("sfwes.test-watcher")
+			test_watcher.watch(test_data)
+			test_data = {}
+		else
+			if vim.tbl_contains(marked_lines, cursor_line) then
+				local current_line = vim.api.nvim_get_current_line()
+				local last_word = current_line:match("(%w+)%W*$")
+				local current_file_name = vim.fn.expand("%:t"):match("^(.*)%.")
+				if last_word == current_file_name then
+					_sf.run_tests(current_file_name)
+				else
+					_sf.run_test(current_file_name, last_word)
+				end
 			end
 		end
 	end, {})

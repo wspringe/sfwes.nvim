@@ -18,6 +18,7 @@ function M.setup(opts)
 	vim.api.nvim_create_autocmd({ "BufReadPost", "TextChanged", "TextChangedI" }, {
 		callback = function(args)
 			if vim.bo.ft == "apex" then
+				vim.api.nvim_buf_clear_namespace(0, _config.get_namespace(), 0, -1)
 				local buffer = args.buf
 				local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
 				for i, line in ipairs(lines) do
