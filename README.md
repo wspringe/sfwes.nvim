@@ -4,7 +4,7 @@
   <br>
 </h1>
 
-<h4 align="center">A Neovim plugin to support Salesforce development.
+<h4 align="center">A Neovim plugin to support Salesforce development. Requires <a href="https://github.com/nvim-lualine/lualine.nvim">lualine</a> for the best experience.
 
 <p align="center">
   <a href="#key-features">Key Features</a> •
@@ -14,7 +14,9 @@
 ## Key Features
 
 * Command to deploy your currently open buffer to your project's default org
+  - If lualine is installed, displays an indicator for the deployment status 
 * Command to refresh the metadata in your currently open buffer from your project's default org
+   - If lualine is installed, displays an indicator for the refresh status 
 * Command to create a new apex or trigger class, or lwc
 
 ### Running tests
